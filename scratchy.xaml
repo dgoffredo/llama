@@ -1,0 +1,18 @@
+<Border p:Name="cell_0_0_0" Hold="cell_Hold" Background="{StaticResource y0Brush}" HorizontalAlignment="Left" 
+        Height="{StaticResource cellHeight}" Width="{StaticResource cellWidth}"  
+        VerticalAlignment="Top" Tap="cell_Tap" Margin="49,402,0,0">
+  <Border.Projection>
+    <PlaneProjection p:Name="cell_0_0_0_proj" GlobalOffsetZ="0" GlobalOffsetY="0" GlobalOffsetX="0" />
+  </Border.Projection>
+  <Border.RenderTransform>
+    <TranslateTransform p:Name="cell_0_0_0_tran" X="0" Y="0" />
+  </Border.RenderTransform>
+  <Border.Resources>
+    <System:Int32 x:Key="HomeX">0</System:Int32>
+    <System:Int32 x:Key="HomeY">0</System:Int32>
+    <System:Int32 x:Key="HomeZ">0</System:Int32>
+    <System:Boolean x:Key="isPreset">False</System:Boolean>
+  </Border.Resources>
+
+  <TextBlock HorizontalAlignment="Center" FontSize="{StaticResource cellFontSize}" />
+</Border>
