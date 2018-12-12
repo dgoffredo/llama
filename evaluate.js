@@ -69,7 +69,7 @@ function apply(procedure, args, environment) {
 
 const defaultEnvironment = Object.freeze({
     bindings: {
-        // foo: {string: "This is foo's value"}
+        /* foo: {string: "This is foo's value"}
         foo: {
             macro: {
                 procedure: (environment, arg) => {
@@ -84,6 +84,7 @@ const defaultEnvironment = Object.freeze({
                 body: {splice: [{number: '42'}, {symbol: 'b'}]}
             }
         },
+        */
         let: {
             macro: {
                 procedure: (environment, {list: bindings}, ...body) => {
@@ -142,6 +143,44 @@ const defaultEnvironment = Object.freeze({
                                                 body:    {splice: body}}},
                                    argValue]};
                 }
+            }
+        },
+        conc: {
+            procedure: (environment, ...args) => {
+                const values = args.reduce(function processArg(result, arg) {
+                    const [key, value] = keyValue(arg);
+                    if (key === 'quote') {
+                        return processArg(result, value);
+                    }
+
+                    (result[key] = result[key] || []).push(value);
+                    return result;
+                }, {}),
+                      keys = Object.keys(values);
+
+                if (keys.length !== 1) {
+                    throw new Error('conc expected arguments having the same ' +
+                                    'type (either symbol or string), but ' +
+                                    `instead the following ${keys.length} ` +
+                                    'types were included together: ' +
+                                    JSON.stringify(keys));
+                }
+
+                const [type, literals] = keyValue(values);
+                return {
+                    [type]: literals.join('')
+                };
+            }
+        },
+        repeat: {
+            procedure: (environment, {number: countStr}, what) => {
+                const count = Number(countStr),
+                      dupes = [];
+                for (let i = 0; i !== count; ++i) {
+                    dupes.push(what);
+                }
+
+                return {splice: dupes};
             }
         }
     }
