@@ -30,21 +30,24 @@ function onInput() {
         const input  = entry.value,
               tokens = Lex.tokens(input),
               tree   = Parse.parse(tokens),
-              value  = Evaluate.evaluate(tree, Builtins.defaultEnvironment);
+              value  = Evaluate.evaluate(tree, Builtins.defaultEnvironment),
+              node   = Xml.toNode(value),
+              text   = Xml.toXml(node);
 
          calculated = {
              tokens:   pprint(tokens),
              parse:    pprint(tree),
              evaluate: pprint(value),
-             nodes:    'nodes TODO',
-             text:     'text TODO'
+             nodes:    pprint(node),
+             text
          }               
 
         display.style.backgroundColor = '';
         onToggle();
     }
     catch (error) {
-        display.style.backgroundColor = 'red';
+        display.style.backgroundColor = '#FFF0F0';
+        throw error;
     }
 }
     </script>
@@ -66,19 +69,24 @@ function onInput() {
         <td></td>
         <td>
           <form>
-            <input type="radio" name="showWhat" onchange="onToggle()" value="tokens"   id="radioTokens">
+            <input type="radio"     name="showWhat" onchange="onToggle()"
+                   value="tokens"   id="radioTokens">
             <label for="radioTokens">Tokens</label>
 
-            <input type="radio" name="showWhat" onchange="onToggle()" value="parse"    id="radioParse">
+            <input type="radio"     name="showWhat" onchange="onToggle()"
+                   value="parse"    id="radioParse">
             <label for="radioParse">Parse Tree</label>
 
-            <input type="radio" name="showWhat" onchange="onToggle()" value="evaluate" id="radioEvaluate" checked>
+            <input type="radio"     name="showWhat" onchange="onToggle()"
+                   value="evaluate" id="radioEvaluate">
             <label for="radioEvaluate">Evaluated Tree</label>
 
-            <input type="radio" name="showWhat" onchange="onToggle()" value="nodes"    id="radioNodes">
+            <input type="radio"     name="showWhat" onchange="onToggle()"
+                   value="nodes"    id="radioNodes">
             <label for="radioNodes">XML Nodes</label>
 
-            <input type="radio" name="showWhat" onchange="onToggle()" value="text"     id="radioText">
+            <input type="radio"     name="showWhat" onchange="onToggle()"
+                   value="text"     id="radioText"  checked>
             <label for="radioText">XML Text</label>
           </form>
         </td>
