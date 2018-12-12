@@ -83,7 +83,11 @@ function flattenSplices(array) {
 function evaluate(datum, environment) {
     const [key, value] = keyValue(datum),
           listOrSplice = whichOne => () => {
-        // TODO assert value.length >= 1
+
+        if (value.length === 0) {
+            return datum;
+        }
+
         const first          = evaluate(value[0], environment),
               rest           = value.slice(1),
               [type, inside] = keyValue(first),
@@ -111,7 +115,6 @@ function evaluate(datum, environment) {
                              rest.map(recur),
                              environment);
             }
-            // TODO intrinsics, e.g. `conc`
         }[type] || plainList)();
     };
 

@@ -95,7 +95,11 @@ function repeatProcedure(environment, {number: countStr}, what) {
 
     return {splice: dupes};
 }
-            
+
+function commentMacroProcedure() {
+    return {splice: []};
+}
+
 const defaultEnvironment = Object.freeze({
     bindings: {
         let: {
@@ -108,6 +112,11 @@ const defaultEnvironment = Object.freeze({
         },
         repeat: {
             procedure: repeatProcedure
+        },
+        comment: {
+            macro: {
+                procedure: commentMacroProcedure
+            }
         }
     }
 });

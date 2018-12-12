@@ -102,8 +102,10 @@ TODO
 ### The `let` Macro
 TODO
 
-### Built-in Procedures
-- `(conc args ...)`: concatenate the arguments, which must all be strings or
+### Built-in Procedures and Macros
+- `(conc args ...)`: Concatenate the arguments, which must all be strings or
   all be symbols, and return the resulting combined string or symbol.
-- `(repeat count datum)`: splice `count` copies of `datum` into the enclosing
+- `(repeat count datum)`: Splice `count` copies of `datum` into the enclosing
   list.
+- `(comment args ...)`: Ignore the form -- `comment` is a macro that expands to
+  nothing.
