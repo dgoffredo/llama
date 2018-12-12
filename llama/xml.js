@@ -202,15 +202,15 @@ function toXml(node) {
                   map(name => {
                       const attrValue = toAttributeValue(attributes[name]);
                       return `${name}=${JSON.stringify(escapeXml(attrValue))}`;
-                  }).
-                  join(' ');
+                  }),
+          tagAndAttrs = [tag].concat(attrs).join(' ');
 
     if (children.length === 0) {
-        return `<${tag} ${attrs}/>`;
+        return `<${tagAndAttrs}/>`;
     }
     
     const kids = children.map(toXml).join('');
-    return `<${tag} ${attrs}>${kids}</${tag}>`;
+    return `<${tagAndAttrs}>${kids}</${tag}>`;
 }
 
 return {toNode, toXml};
