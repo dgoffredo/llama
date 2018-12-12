@@ -206,7 +206,7 @@ function toXml(node) {
                   join(' ');
 
     if (children.length === 0) {
-        return `<${tag} ${attrs} />`;
+        return `<${tag} ${attrs}/>`;
     }
     
     const kids = children.map(toXml).join('');
