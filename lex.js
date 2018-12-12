@@ -83,4 +83,8 @@ const Lex = (function () {
     return {tokens};
 }());
 
-Object.assign(exports, Lex);
+try {
+    Object.assign(exports, Lex);
+}
+catch (e) {
+}

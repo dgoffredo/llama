@@ -95,4 +95,8 @@ return {parse};
 
 }());
 
-Object.assign(exports, Parse);
+try {
+    Object.assign(exports, Parse);
+}
+catch (e) {
+}
