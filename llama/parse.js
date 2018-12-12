@@ -85,8 +85,9 @@ function doParse(tokens, index) {
 }
 
 function parse(tokens) {
-    const notWhitespace        =  token => token.kind !== 'whitespace',
-          [parsed, indexAfter] =  doParse(tokens.filter(notWhitespace), 0);
+    const interested =
+              token => ['whitespace', 'comment'].indexOf(token.kind) === -1,
+          [parsed, indexAfter] =  doParse(tokens.filter(interested), 0);
 
     return parsed;
 }

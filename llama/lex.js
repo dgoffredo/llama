@@ -9,9 +9,10 @@ const Lex = (function () {
         {openBrace:        /\{/},
         {closeBrace:       /\}/},
         {whitespace:       /\s+/},
-        {number:           /\d[^'\s()[\]{}]*/},
-        {symbol:           /[^'\d\s()[\]{}][^'\s()[\]{}]*/},
-        {quote:            /'/}
+        {number:           /\d[^;'\s()[\]{}]*/},
+        {symbol:           /[^;'\d\s()[\]{}][^;'\s()[\]{}]*/},
+        {quote:            /'/},
+        {comment:          /;[^\n]*(?:\n|$)/}
     ].map(entry => {
         const [kind]  = Object.keys(entry),
               pattern = entry[kind].source;
