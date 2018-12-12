@@ -1,8 +1,8 @@
 
-const Lex      = require('./lex.js'),
-      Parse    = require('./parse.js'),
-      Evaluate = require('./evaluate.js'),
-      Builtins = require('./builtins.js');
+const Lex      = require('../llama/lex.js'),
+      Parse    = require('../llama/parse.js'),
+      Evaluate = require('../llama/evaluate.js'),
+      Builtins = require('../llama/builtins.js');
 
 function display(name, value) {
     console.log(`${name}: ${JSON.stringify(value, null, 4)}`);
@@ -10,7 +10,7 @@ function display(name, value) {
 
 const input = `(let ([letterQ "q"]
                      [(withX a1 a2) ('x a2 a1)])
-                 (withX "a" "b")
+                 (withX "a")
                  (withX letterQ "r")
                  (repeat 10 22))`
 display('input', input);
