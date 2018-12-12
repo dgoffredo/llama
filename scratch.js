@@ -1,7 +1,8 @@
 
 const Lex      = require('./lex.js'),
       Parse    = require('./parse.js'),
-      Evaluate = require('./evaluate.js');
+      Evaluate = require('./evaluate.js'),
+      Builtins = require('./builtins.js');
 
 function display(name, value) {
     console.log(`${name}: ${JSON.stringify(value, null, 4)}`);
@@ -20,5 +21,5 @@ display('tokens', tokens);
 const tree = Parse.parse(tokens);
 display('tree', tree);
 
-const result = Evaluate.evaluate(tree);
+const result = Evaluate.evaluate(tree, Builtins.defaultEnvironment);
 display('result', result);
