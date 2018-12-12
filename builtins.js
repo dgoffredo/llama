@@ -96,7 +96,6 @@ function repeatProcedure(environment, {number: countStr}, what) {
     return {splice: dupes};
 }
             
-
 const defaultEnvironment = Object.freeze({
     bindings: {
         let: {
