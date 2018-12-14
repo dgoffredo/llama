@@ -18,6 +18,50 @@ const Evaluate = (function () {
     {procedure: function (env, ...args) {...}}
 */
 
+const json = JSON.stringify;
+
+function isObject(value) {
+    // https://stackoverflow.com/a/4320789
+    return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+function deepEqual(a, b) {
+    // just an optimization
+    if (typeof a !== typeof b) {
+        return false;
+    }
+
+    // types whose values can be compared directly
+    if (a === undefined || 
+        a === null || 
+        ['boolean', 'number', 'string'].indexOf(typeof a) !== -1) {
+        return a === b;
+    }
+
+    // dates
+    if (a instanceof Date && b instanceof Date) {
+        return a.valueOf() === b.valueOf();
+    }
+
+    // arrays
+    if (Array.isArray(a) && Array.isArray(b)) {
+        return a.length === b.length &&
+               a.every((aMember, index) => deepEqual(aMember, b[index]));
+               
+    }
+
+    // objects like object literals
+    if (isObject(a) && isObject(b)) {
+        const aKeys = Object.keys(a);
+
+        return aKeys.sort() === Object.keys(b).sort() &&
+               aKeys.every(aKey => deepEqual(a[aKey], b[aKey]));
+    }
+
+    // Ran out of ideas. Compare identity.
+    return a === b;
+}
+
 function keyValue(object) {
     // TODO assert that there is exactly one key.
     const key = Object.keys(object)[0];
@@ -38,14 +82,129 @@ function lookup(symbolName, environment) {
     }
 }
 
-function deduceBindings(pattern, args) {
-    // TODO: Support pattern matching. For now it's just a list of symbols.
-    const {list} = pattern;
+function checkEllipsis(arrayPattern) {
+    // Return whether the specified array uses the ellipsis ("...") correctly
+    // as would be used in a procedure argument pattern. If ellipses are used
+    // correctly, return `true`. If ellipses are used but incorrectly, throw an
+    // `Error`. If ellipsis are not used at all, return `false`. Note that this
+    // function checks only `arrayPattern` for use of ellipsis, but not any of
+    // its elements.
 
-    return list.reduce((result, {symbol}, i) => {
-        result[symbol] = args[i];
-        return result;
-    }, {});
+    // TODO: assert that `Array.isArray(arrayPattern)`
+    if (arrayPattern.length === 0) {
+        return false;
+    }
+
+    if (arrayPattern.slice(0, -1).find(datum => datum.symbol === '...')) {
+        throw new Error('Improper use of "..." in pattern. "..." must appear ' +
+                        'only at the end of a list, but here it appears ' +
+                        `elsewhere: ${json(arrayPattern)}`);
+    }
+    
+    return arrayPattern[arrayPattern.length - 1].symbol === '...';
+}
+
+function bindingsFromMatch(pattern, subject, bindings) {
+    // Insert into `bindings` variable value bindings deduced by matching
+    // `subject` against `pattern`, and return `bindings`. This function treats
+    // the `...` symbol specially in `pattern` to mean "zero or more of" the
+    // subpattern immediately to its left at the end of a list. Variables
+    // appearing within a subpattern with N levels of `...` are bound as arrays
+    // nested in arrays `N` levels deep, e.g. the pattern
+    //
+    //    (foo (bar baz ...) ...)
+    //
+    // given the subject:
+    //
+    //    (hello (names Bob George) (ages 23 57) (nations usa uk))
+    //
+    // would deduce bindings like the following (here without node types):
+    //
+    //     {
+    //         foo: hello,
+    //         bar: [names, ages, nations],
+    //         baz: [[Bob, George], [23, 57], [usa, uk]]
+    //     }
+
+    bindings = bindings || {};
+
+    const [patternType, patternValue] = keyValue(pattern),
+          [subjectType, subjectValue] = keyValue(subject);
+
+    // If the pattern is something literal, then whatever it matches has to be
+    // exactly the same.
+    if (['quote', 'number', 'string'].indexOf(patternType) !== -1 &&
+        // compare type in addition to value
+        !deepEqual(pattern, subject)) {
+        throw new Error(`The value parsed as ${json(subject)} does not match ` +
+                        `the literal pattern ${json(pattern)}.`);
+    }
+
+    // If the pattern is a symbol, then just bind the subject to that name.
+    if (patternType === 'symbol') {
+        bindings[patternValue] = subject;
+        return bindings;
+    }
+
+    // TODO assert patternType === 'list' (has to be true)
+
+    if (subjectType !== 'list') {
+        throw new Error(`Pattern contains a list ${json(patternValue)}, but ` +
+                        `value parsed is a ${subjectType}: ${json(subject)}`);
+    }
+
+    if (checkEllipsis(patternValue)) {
+        // This pattern list ends in "...", so special consideration must be
+        // taken for the "zero or more of" behavior.
+        const unaffectedEnd     = patternValue.length - 2,
+              unaffected        = patternValue.slice(0, unaffectedEnd),
+              unaffectedSubject = subjectValue.slice(0, unaffected.length);
+              affected          = patternValue[unaffectedEnd],
+              affectedSubject   = subjectValue.slice(unaffected.length);
+
+        // The parts unaffected by the "...", e.g. `foo bar` in
+        // `(foo bar baz ...)`, can be treated normally.
+        bindingsFromMatch({list: unaffected},
+                          {list: unaffectedSubject},
+                          bindings);
+
+        // The part affected by the "...", e.g. `baz` in `(foo bar baz ...)`,
+        // needs special treatment.
+        affectedSubject.forEach(affectedSubject => {
+            const bindingsThisTime =
+                bindingsFromMatch(affected, affectedSubject, {});
+
+            // Append the bound values to _arrays_ by the same name in bindings.
+            Object.keys(bindingsThisTime).forEach(name => {
+                const value  = bindingsThisTime[name];
+                var   values = bindings[name];
+
+                if (values === undefined) {
+                    bindings[name] = values = {list: []};
+                }
+
+                values.list.push(value);
+            });
+        });
+    }
+    else {
+        // No ellipsis, so just match per element.
+        if (subjectValue.length !== patternValue.length) {
+            const difference = subjectValue.length < patternValue.length ?
+                               'shorter' : 'longer';
+            throw new Error(`Parsed value ${subject} is ${difference} than, ` +
+                            `and thus doesn't match, the pattern ${pattern}.`);
+        }
+
+        patternValue.forEach((patternMember, i) =>
+            bindingsFromMatch(patternMember, subjectValue[i], bindings));
+    }
+
+    return bindings;
+}
+
+function deduceBindings(pattern, args) {
+    return bindingsFromMatch(pattern, {list: args});
 }
 
 function apply(procedure, args, environment) {
@@ -93,7 +252,7 @@ function evaluate(datum, environment) {
               [type, inside] = keyValue(first),
               recur          = arg => evaluate(arg, environment),
               plainList      = () => ({
-                  [whichOne]: flattenSplices([first].concat(rest.map(recur)))
+                  [whichOne]: flattenSplices([first, ...rest.map(recur)])
                 });
        
         // switch on `type`
@@ -111,8 +270,7 @@ function evaluate(datum, environment) {
                 // value.
                 const procedure = inside;
                 return apply(procedure, 
-                             // flattenSplices(rest.map(recur)), TODO?
-                             rest.map(recur),
+                             flattenSplices(rest.map(recur)),
                              environment);
             }
         }[type] || plainList)();
@@ -140,6 +298,7 @@ return {
 
 }());
 
+// for node.js
 try {
     Object.assign(exports, Evaluate);
 }
