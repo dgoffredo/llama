@@ -44,6 +44,8 @@ number, symbol, or a list. If it's a symbol, then it's converted into a string.
 If it's a list, then the list is converted into a Node.
 */
 
+const json = JSON.stringify;
+
 function keyValue(object) {
     // TODO assert that there is exactly one key.
     const key = Object.keys(object)[0];
@@ -73,7 +75,7 @@ function toNodeNoQuote(evaluatedTree) {
     }
 
     if (type !== "list") {
-        throw new Error(`XML node cannot have type ${JSON.stringify(type)}. ` +
+        throw new Error(`XML node cannot have type ${json(type)}. ` +
                         'It must be of type string, number, or list. Tag ' +
                         'names and attributes may contain symbols, but the ' +
                         'nodes themselves cannot be.');
@@ -81,6 +83,12 @@ function toNodeNoQuote(evaluatedTree) {
 
     const [first, ...rest] = value,
           {symbol: tag}    = first;
+
+    if (!tag) {
+        throw new Error(`${json(first)} is invalid for use as a tag name. ` +
+                        'Tag names must be nonempty symbols.');
+    }
+
     // Cases:
     // - `rest` is empty: means `first` is an empty tag.
     // - `rest`'s first element looks like an attribute list.
@@ -134,7 +142,7 @@ function parseAttributes(inputList) {
               [valueType, valueValue] = keyValue(value);
 
         if (name in attributes) {
-            throw new Error(`Duplicate attribute ${JSON.stringify(name)}.`);
+            throw new Error(`Duplicate attribute ${json(name)}.`);
         }
 
         // switch on `valueType`
@@ -150,8 +158,6 @@ function parseAttributes(inputList) {
 }
 
 function toAttributeValue(node) {
-    console.log('Calling toAttributeValue on ', node);
-
     if ('number' in node) {
         return node.number;
     }
@@ -201,9 +207,9 @@ function toXml(node) {
           attrs = Object.keys(attributes).
                   map(name => {
                       const attrValue = toAttributeValue(attributes[name]);
-                      return `${name}=${JSON.stringify(escapeXml(attrValue))}`;
+                      return `${name}=${json(escapeXml(attrValue))}`;
                   }),
-          tagAndAttrs = [tag].concat(attrs).join(' ');
+          tagAndAttrs = [tag, ...attrs].join(' ');
 
     if (children.length === 0) {
         return `<${tagAndAttrs}/>`;
@@ -217,6 +223,7 @@ return {toNode, toXml};
 
 }());
 
+// for node.js
 try {
     Object.assign(exports, Xml);
 }

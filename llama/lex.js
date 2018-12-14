@@ -84,6 +84,7 @@ const Lex = (function () {
     return {tokens};
 }());
 
+// for node.js
 try {
     Object.assign(exports, Lex);
 }

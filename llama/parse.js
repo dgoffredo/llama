@@ -96,6 +96,7 @@ return {parse};
 
 }());
 
+// for node.js
 try {
     Object.assign(exports, Parse);
 }
