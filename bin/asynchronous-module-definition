@@ -1,0 +1,62 @@
+#!/bin/sh
+
+llamasrc=$(dirname $(dirname $(readlink -f $0)))/llama
+
+cat <<END_CODE
+// This asynchronous module definition was generated from the source
+// respository of the Lisp-Like Application Markup Acronym (Llama) compiler.
+
+define([], function () {
+
+///////////////////////////////////////////////////////////////////////////////
+//                                 lex.js
+///////////////////////////////////////////////////////////////////////////////
+$(cat $llamasrc/lex.js)
+///////////////////////////////////////////////////////////////////////////////
+//                                parse.js
+///////////////////////////////////////////////////////////////////////////////
+$(cat $llamasrc/parse.js)
+///////////////////////////////////////////////////////////////////////////////
+//                               evaluate.js
+///////////////////////////////////////////////////////////////////////////////
+$(cat $llamasrc/evaluate.js)
+///////////////////////////////////////////////////////////////////////////////
+//                               builtins.js
+///////////////////////////////////////////////////////////////////////////////
+$(cat $llamasrc/builtins.js)
+///////////////////////////////////////////////////////////////////////////////
+//                                 xml.js
+///////////////////////////////////////////////////////////////////////////////
+$(cat $llamasrc/xml.js)
+
+const thrush = (value, func, ...functions) =>
+    // The thrush combinator converts pipeline-order to application-order, e.g.
+    //     thrush(100, Math.sqrt, Math.log10, String)
+    // is the same as
+    //     String(Math.log10(Math.sqrt(100)))
+    // which is '2'.
+
+    func === undefined ? value
+                       : thrush(func(value), ...functions);
+
+const toXml = llamaText =>
+    // toXml converts a string containing a Llama list into a string containing
+    // an XML document.
+    thrush(llamaText,
+           Lex.tokens,
+           Parse.parse,
+           tree => Evaluate.evaluate(tree, Builtins.defaultEnvironment),
+           Xml.toNode,
+           Xml.toXml);
+
+return {
+    toXml,
+    Lex, 
+    Parse, 
+    Evaluate, 
+    Builtins, 
+    Xml
+};
+
+});
+END_CODE
