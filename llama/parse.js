@@ -4,6 +4,7 @@ const Parse = (function () {
     datum  ::=   STRING
             |    NUMBER
             |    SYMBOL
+            |    COMMENT
             |    list
             |    quote
 
@@ -22,7 +23,7 @@ const Parse = (function () {
     {list: ...}    // as an array
     {quote: ...}   // as another node (e.g. 'foo -> {quote: {symbol: "foo"}})
 
-Note that whitespace tokens are ignored during parsing.
+Note that whitespace tokens and comment tokens are ignored during parsing.
 */
 
 function listParser(suffix, tokens, index) {

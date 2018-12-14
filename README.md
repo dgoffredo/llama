@@ -92,20 +92,252 @@ be selected:
 - *XML Text*: the final XML output
 
 ### Using node.js
-TODO
+Each `.js` file in [](llama/) is a node module. None of them have dependencies.
+You can import using `require`, e.g. `const Lex = require('./llama/lex.js')`.
 
 More
 ----
 ### Grammar
-TODO
+A Llama value is any of the following productions:
+
+    datum  ::=   STRING
+            |    NUMBER
+            |    SYMBOL
+            |    COMMENT
+            |    list
+            |    quote
+
+    list   ::=   "(" datum* ")"
+            |    "[" datum* "]"
+            |    "{" datum* "}"
+
+    quote  ::=  QUOTE datum
+
+    STRING      ::=  /"(?:[^"]|\\.)*"/
+    WHITESPACE  ::=  /\s+/
+    NUMBER      ::=  /\d[^;'\s()[\]{}]*/
+    SYMBOL      ::=  /[^;'\d\s()[\]{}][^;'\s()[\]{}]*/
+    QUOTE       ::=  /'/
+    COMMENT     ::=  /;[^\n]*(?:\n|$)/
+
+where `WHITESPACE` and `COMMENT` tokens are ignored.
 
 ### The `let` Macro
-TODO
+The `let` macro allows for the definition of local name bindings and procedures.
+For example, an alias can be given for a long value:
+```clojure
+(App
+  (StaticData
+    (let ([matrix (Matrix ((rows 5) (columns 5))
+                    (Matrix.rows
+                      (let ([row (Matrix.Row 
+                                   (Int 0) (Int 0) (Int 0) (Int 0) (Int 0))])
+                        row row row row row)))])
+      (StaticDatum ((name initialFoo)) matrix)
+      (StaticDatum ((name initialBar)) matrix)
+      (StaticDatum ((name initialBaz)) matrix)
+      (StaticDatum ((name initialZoo)) matrix)
+      (StaticDatum ((name initialWho)) matrix)
+      (StaticDatum ((name initialYou)) matrix))))
+```
+That's a lot shorter than the resulting XML:
+```xml
+<App>
+  <StaticData>
+    <StaticDatum name="initialFoo">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+    <StaticDatum name="initialBar">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+    <StaticDatum name="initialBaz">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+    <StaticDatum name="initialZoo">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+    <StaticDatum name="initialWho">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+    <StaticDatum name="initialYou">
+      <Matrix rows="5" columns="5">
+        <Matrix.rows>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+          <Matrix.Row>
+            <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int> <Int>0</Int>
+          </Matrix.Row>
+        </Matrix.rows>
+      </Matrix>
+    </StaticDatum>
+  </StaticData>
+</App>
+```
+That Llama can be made even simpler by defining some procedures, another feature
+of the `let` macro:
+```clojure
+(StaticData
+    (let ([matrix (Matrix ((rows 5) (columns 5))
+                    (Matrix.rows
+                      (let ([row (Matrix.Row 
+                                   (Int 0) (Int 0) (Int 0) (Int 0) (Int 0))])
+                        row row row row row)))]
+          [(staticMatrix name) (StaticDatum (('name name)) matrix)])
+      (staticMatrix initialFoo)
+      (staticMatrix initialBar)
+      (staticMatrix initialBaz)
+      (staticMatrix initialZoo)
+      (staticMatrix initialWho)
+      (staticMatrix initialYou))))
+```
+The real power of `let` procedures, though, is the ability to pattern match
+against sequences using the ellipsis. "`...`" stands for "zero or more" of
+whatever precedes it. For example:
+```clojure
+(RowTemplate.cells
+  (let ([(Cell expr (attr value) ...)
+         (Table.Cell ((factory label) (set.text expr) (attr value) ...))])
+    (Cell @name)
+    (Cell @email)
+    (Cell @rank)
+    ; notice the extra attribute(s) in the following:
+    (Cell @salary (secret true))
+    (Cell @party (secret false) (annotations deprecated))))
+```
+The `Cell` procedure will take zero or more trailing arguments each matching
+`(attr value)`, and append them to the attributes section of the expanded form.
+
+The `...` can even be nested, though it's uncommon:
+```clojure
+(Example
+  (let ([(AllAliases (person alias ...) ...) (Aliases (Alias alias) ... ...)])
+    (AllAliases (Robert G-Unit Bob Bert)
+                (Steve  Steve-O V-unit)
+                (Mary   Steve)
+                (Fred   Ed))))
+```
+expands to:
+```xml
+<Example>
+  <Aliases>
+    <Alias>G-Unit</Alias>
+    <Alias>Bob</Alias>
+    <Alias>Bert</Alias>
+    <Alias>Steve</Alias>
+    <Alias>Steve-O</Alias>
+    <Alias>V-unit</Alias>
+    <Alias>Mary</Alias>
+    <Alias>Steve</Alias>
+    <Alias>Fred</Alias>
+    <Alias>Ed</Alias>
+  </Aliases>
+</Example>
+```
 
 ### Built-in Procedures and Macros
 - `(conc args ...)`: Concatenate the arguments, which must all be strings or
   all be symbols, and return the resulting combined string or symbol.
 - `(repeat count datum)`: Splice `count` copies of `datum` into the enclosing
   list.
-- `(comment args ...)`: Ignore the form -- `comment` is a macro that expands to
-  nothing.
+- `(comment args ...)`: Ignore the form. This gives a convenient way to comment
+  out blocks of code in a nestable way.
