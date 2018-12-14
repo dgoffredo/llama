@@ -69,6 +69,43 @@ function keyValue(object) {
     return [key, object[key]];
 }
 
+function sexpr(datum) {
+    const [type, value] = keyValue(datum);
+
+    if (type === 'symbol' || type === 'number') {
+        return value;
+    }
+    if (type === 'string') {
+        return json(value);
+    }
+    if (type === 'quote') {
+        return "'" + sexpr(value);
+    }
+    if (type === 'list') {
+        return '(' + value.map(sexpr).join(' ') + ')';
+    }
+    if (type === 'splice') {
+        return value.map(sexpr).join(' ');
+    }
+    if (type === 'procedure') {
+        if (typeof value === 'function') {
+            return '(lambda #native)';
+        }
+        const {pattern, body} = value;
+        return '(lambda ' + sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
+    }
+    if (type === 'macro') {
+        if (typeof value.procedure === 'function') {
+            return '(macro #native)';
+        }
+        const {pattern, body} = value.procedure;
+        return '(macro ' +  sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
+    }
+
+    // TODO Use an assert above instead.
+    throw new Error(`Unrecognized node type ${json(type)}: ${json(value)}`);
+}
+
 function lookup(symbolName, environment) {
     const value = environment.bindings[symbolName];
     if (value !== undefined) {
@@ -158,7 +195,7 @@ function bindingsFromMatch(pattern, subject, bindings) {
         // taken for the "zero or more of" behavior.
         const unaffectedEnd     = patternValue.length - 2,
               unaffected        = patternValue.slice(0, unaffectedEnd),
-              unaffectedSubject = subjectValue.slice(0, unaffected.length);
+              unaffectedSubject = subjectValue.slice(0, unaffected.length),  // AAUUUGHHHH!!!!
               affected          = patternValue[unaffectedEnd],
               affectedSubject   = subjectValue.slice(unaffected.length);
 
@@ -170,9 +207,9 @@ function bindingsFromMatch(pattern, subject, bindings) {
 
         // The part affected by the "...", e.g. `baz` in `(foo bar baz ...)`,
         // needs special treatment.
-        affectedSubject.forEach(affectedSubject => {
+        affectedSubject.forEach(affectedSubjectPart => {
             const bindingsThisTime =
-                bindingsFromMatch(affected, affectedSubject, {});
+                bindingsFromMatch(affected, affectedSubjectPart, {});
 
             // Append the bound values to _arrays_ by the same name in bindings.
             Object.keys(bindingsThisTime).forEach(name => {
@@ -192,8 +229,9 @@ function bindingsFromMatch(pattern, subject, bindings) {
         if (subjectValue.length !== patternValue.length) {
             const difference = subjectValue.length < patternValue.length ?
                                'shorter' : 'longer';
-            throw new Error(`Parsed value ${subject} is ${difference} than, ` +
-                            `and thus doesn't match, the pattern ${pattern}.`);
+            throw new Error(`Parsed value ${json(subject)} is ` +
+                            `${json(difference)} than, and thus doesn't ` +
+                            `match, the pattern ${json(pattern)}.`);
         }
 
         patternValue.forEach((patternMember, i) =>

@@ -10,6 +10,43 @@ function keyValue(object) {
     return [key, object[key]];
 }
 
+function sexpr(datum) {
+    const [type, value] = keyValue(datum);
+
+    if (type === 'symbol' || type === 'number') {
+        return value;
+    }
+    if (type === 'string') {
+        return json(value);
+    }
+    if (type === 'quote') {
+        return "'" + sexpr(value);
+    }
+    if (type === 'list') {
+        return '(' + value.map(sexpr).join(' ') + ')';
+    }
+    if (type === 'splice') {
+        return value.map(sexpr).join(' ');
+    }
+    if (type === 'procedure') {
+        if (typeof value === 'function') {
+            return '(lambda #native)';
+        }
+        const {pattern, body} = value;
+        return '(lambda ' + sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
+    }
+    if (type === 'macro') {
+        if (typeof value.procedure === 'function') {
+            return '(macro #native)';
+        }
+        const {pattern, body} = value.procedure;
+        return '(macro ' +  sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
+    }
+
+    // TODO Use an assert above instead.
+    throw new Error(`Unrecognized node type ${json(type)}: ${json(value)}`);
+}
+
 function repositionEllipses(datum) {
     // Return a transformed copy of `datum` where trailing "<etc> ..." have been
     // replaced by `(... <etc>)` forms.
@@ -21,7 +58,7 @@ function repositionEllipses(datum) {
 
     if (value[0].symbol === '...') {
         throw new Error('"..." cannot appear first in a procedure body ' +
-                        `(template): ${json(datum)}`);
+                        `(template): ${sexpr(datum)}`);
     }
 
     // TODO: describe this funny thing
@@ -127,7 +164,7 @@ function concProcedure(environment, ...args) {
         throw new Error('conc expected arguments having the same type ' +
                         '(either symbol or string), but instead the  ' +
                         `following ${keys.length} types were included ` +
-                        'together: ' + JSON.stringify(keys));
+                        `together: ${sexpr(keys)}`);
     }
 
     const [type, literals] = keyValue(values);
@@ -195,7 +232,7 @@ function ellipsisMacroProcedure(environment, ...args) {
 
     if (args.length !== 1) {
         throw new Error('The "..." macro takes exactly one argument, but was ' +
-                        `called with ${args.length}: ${json(args)}.`);
+                        `called with ${args.length}: ${sexpr(args)}.`);
     }
 
     const arg              = args[0],
@@ -208,7 +245,7 @@ function ellipsisMacroProcedure(environment, ...args) {
               if (array === undefined) {
                   throw new Error('When used in a context with "...", a ' +
                                   'variable must be bound to a list, but ' +
-                                  `${name} is bound to ${json(value)}.`);
+                                  `${name} is bound to ${sexpr(value)}.`);
               }
               
               result[name] = array;
@@ -230,7 +267,7 @@ function ellipsisMacroProcedure(environment, ...args) {
     //
     // and so on.
     //   
-    return {
+    const expanded = {
         splice: transpose(referencedValues).map(bindings => ({
             list: [
                 {symbol: 'let'},
@@ -241,6 +278,8 @@ function ellipsisMacroProcedure(environment, ...args) {
             ]
         }))
     };
+
+    return expanded;
 }
 
 const defaultEnvironment = Object.freeze({

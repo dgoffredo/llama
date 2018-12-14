@@ -308,6 +308,30 @@ whatever precedes it. For example:
 The `Cell` procedure will take zero or more trailing arguments each matching
 `(attr value)`, and append them to the attributes section of the expanded form.
 
+The `...` can even be nested, though it's uncommon:
+```clojure
+(Example
+  (let ([(AllAliases (person alias ...) ...) (Aliases (Alias alias) ... ...)])
+    (AllAliases (Robert G-Unit Bob Bert)
+                (Steve  Steve-O V-unit)
+                (Mary   Steve)
+                (Fred   Ed))))
+```
+expands to:
+```xml
+<Example>
+  <Aliases>
+    <Alias>G-Unit</Alias>
+    <Alias>Bob</Alias>
+    <Alias>Bert</Alias>
+    <Alias>Steve-O</Alias>
+    <Alias>V-unit</Alias>
+    <Alias>Steve</Alias>
+    <Alias>Ed</Alias>
+  </Aliases>
+</Example>
+```
+
 ### Built-in Procedures and Macros
 - `(conc args ...)`: Concatenate the arguments, which must all be strings or
   all be symbols, and return the resulting combined string or symbol.
