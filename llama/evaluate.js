@@ -1,5 +1,4 @@
-
-const Evaluate = (function () {
+define(['./sexpr', './assert'], function (Sexpr, Assert) {
 /* Here are the possible things:
 
     {string: ...}     // remains verbatim
@@ -14,97 +13,12 @@ const Evaluate = (function () {
     {procedure: {
         pattern: ...
         body ...
-    }  
+    }
     {procedure: function (env, ...args) {...}}
 */
 
-const json = JSON.stringify;
-
-function isObject(value) {
-    // https://stackoverflow.com/a/4320789
-    return Object.prototype.toString.call(value) === '[object Object]';
-}
-
-function deepEqual(a, b) {
-    // just an optimization
-    if (typeof a !== typeof b) {
-        return false;
-    }
-
-    // types whose values can be compared directly
-    if (a === undefined || 
-        a === null || 
-        ['boolean', 'number', 'string'].indexOf(typeof a) !== -1) {
-        return a === b;
-    }
-
-    // dates
-    if (a instanceof Date && b instanceof Date) {
-        return a.valueOf() === b.valueOf();
-    }
-
-    // arrays
-    if (Array.isArray(a) && Array.isArray(b)) {
-        return a.length === b.length &&
-               a.every((aMember, index) => deepEqual(aMember, b[index]));
-               
-    }
-
-    // objects like object literals
-    if (isObject(a) && isObject(b)) {
-        const aKeys = Object.keys(a);
-
-        return aKeys.sort() === Object.keys(b).sort() &&
-               aKeys.every(aKey => deepEqual(a[aKey], b[aKey]));
-    }
-
-    // Ran out of ideas. Compare identity.
-    return a === b;
-}
-
-function keyValue(object) {
-    // TODO assert that there is exactly one key.
-    const key = Object.keys(object)[0];
-
-    return [key, object[key]];
-}
-
-function sexpr(datum) {
-    const [type, value] = keyValue(datum);
-
-    if (type === 'symbol' || type === 'number') {
-        return value;
-    }
-    if (type === 'string') {
-        return json(value);
-    }
-    if (type === 'quote') {
-        return "'" + sexpr(value);
-    }
-    if (type === 'list') {
-        return '(' + value.map(sexpr).join(' ') + ')';
-    }
-    if (type === 'splice') {
-        return value.map(sexpr).join(' ');
-    }
-    if (type === 'procedure') {
-        if (typeof value === 'function') {
-            return '(lambda #native)';
-        }
-        const {pattern, body} = value;
-        return '(lambda ' + sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
-    }
-    if (type === 'macro') {
-        if (typeof value.procedure === 'function') {
-            return '(macro #native)';
-        }
-        const {pattern, body} = value.procedure;
-        return '(macro ' +  sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
-    }
-
-    // TODO Use an assert above instead.
-    throw new Error(`Unrecognized node type ${json(type)}: ${json(value)}`);
-}
+const {json, keyValue, sexpr} = Sexpr,
+      {assert}                = Assert;
 
 function lookup(symbolName, environment) {
     const value = environment.bindings[symbolName];
@@ -127,7 +41,8 @@ function checkEllipsis(arrayPattern) {
     // function checks only `arrayPattern` for use of ellipsis, but not any of
     // its elements.
 
-    // TODO: assert that `Array.isArray(arrayPattern)`
+    assert(() => Array.isArray(arrayPattern));
+
     if (arrayPattern.length === 0) {
         return false;
     }
@@ -135,9 +50,9 @@ function checkEllipsis(arrayPattern) {
     if (arrayPattern.slice(0, -1).find(datum => datum.symbol === '...')) {
         throw new Error('Improper use of "..." in pattern. "..." must appear ' +
                         'only at the end of a list, but here it appears ' +
-                        `elsewhere: ${json(arrayPattern)}`);
+                        `elsewhere: ${sexpr(arrayPattern)}`);
     }
-    
+
     return arrayPattern[arrayPattern.length - 1].symbol === '...';
 }
 
@@ -173,8 +88,8 @@ function bindingsFromMatch(pattern, subject, bindings) {
     if (['quote', 'number', 'string'].indexOf(patternType) !== -1 &&
         // compare type in addition to value
         !deepEqual(pattern, subject)) {
-        throw new Error(`The value parsed as ${json(subject)} does not match ` +
-                        `the literal pattern ${json(pattern)}.`);
+        throw new Error(`The value parsed as ${sexpr(subject)} does not ` +
+                        `match the literal pattern ${sexpr(pattern)}.`);
     }
 
     // If the pattern is a symbol, then just bind the subject to that name.
@@ -183,11 +98,11 @@ function bindingsFromMatch(pattern, subject, bindings) {
         return bindings;
     }
 
-    // TODO assert patternType === 'list' (has to be true)
+    assert.deepEqual(() => patternType, () => "list");
 
     if (subjectType !== 'list') {
-        throw new Error(`Pattern contains a list ${json(patternValue)}, but ` +
-                        `value parsed is a ${subjectType}: ${json(subject)}`);
+        throw new Error(`Pattern contains a list ${sexpr(patternValue)}, but ` +
+                        `value parsed is a ${subjectType}: ${sexpr(subject)}`);
     }
 
     if (checkEllipsis(patternValue)) {
@@ -229,9 +144,9 @@ function bindingsFromMatch(pattern, subject, bindings) {
         if (subjectValue.length !== patternValue.length) {
             const difference = subjectValue.length < patternValue.length ?
                                'shorter' : 'longer';
-            throw new Error(`Parsed value ${json(subject)} is ` +
+            throw new Error(`Parsed value ${sexpr(subject)} is ` +
                             `${json(difference)} than, and thus doesn't ` +
-                            `match, the pattern ${json(pattern)}.`);
+                            `match, the pattern ${sexpr(pattern)}.`);
         }
 
         patternValue.forEach((patternMember, i) =>
@@ -249,7 +164,7 @@ function apply(procedure, args, environment) {
     if (typeof procedure === 'function') {
         // Built-in procedures get executed right here in JS, with the
         // environement as their first argument.
-        return procedure(environment, ...args)
+        return procedure(environment, ...args);
     }
     else {
         // User-(or macro)-defined procedures get their bindings deduced and
@@ -258,7 +173,7 @@ function apply(procedure, args, environment) {
         const {pattern, body} = procedure;
 
         return evaluate(body, {
-            parent:   environment, 
+            parent:   environment,
             bindings: deduceBindings(pattern, args)
         });
     }
@@ -278,6 +193,12 @@ function flattenSplices(array) {
 }
 
 function evaluate(datum, environment) {
+    const result = evaluate_(datum, environment);
+    // console.log(`evaluate\nbefore: ${sexpr(datum)}\nafter: ${sexpr(result)}`);
+    return result;
+}
+
+function evaluate_(datum, environment) {
     const [key, value] = keyValue(datum),
           listOrSplice = whichOne => () => {
 
@@ -292,7 +213,7 @@ function evaluate(datum, environment) {
               plainList      = () => ({
                   [whichOne]: flattenSplices([first, ...rest.map(recur)])
                 });
-       
+
         // switch on `type`
         return ({
             macro: () => {
@@ -307,7 +228,7 @@ function evaluate(datum, environment) {
                 // to the procedure. Whatever it returns is the resulting
                 // value.
                 const procedure = inside;
-                return apply(procedure, 
+                return apply(procedure,
                              flattenSplices(rest.map(recur)),
                              environment);
             }
@@ -334,11 +255,4 @@ return {
     evaluate
 };
 
-}());
-
-// for node.js
-try {
-    Object.assign(exports, Evaluate);
-}
-catch (e) {
-}
+});

@@ -1,51 +1,7 @@
+define(['./sexpr', './assert'], function (Sexpr, Assert) {
 
-const Builtins = (function () {
-
-const json = JSON.stringify;
-
-function keyValue(object) {
-    // TODO assert that there is exactly one key.
-    const key = Object.keys(object)[0];
-
-    return [key, object[key]];
-}
-
-function sexpr(datum) {
-    const [type, value] = keyValue(datum);
-
-    if (type === 'symbol' || type === 'number') {
-        return value;
-    }
-    if (type === 'string') {
-        return json(value);
-    }
-    if (type === 'quote') {
-        return "'" + sexpr(value);
-    }
-    if (type === 'list') {
-        return '(' + value.map(sexpr).join(' ') + ')';
-    }
-    if (type === 'splice') {
-        return value.map(sexpr).join(' ');
-    }
-    if (type === 'procedure') {
-        if (typeof value === 'function') {
-            return '(lambda #native)';
-        }
-        const {pattern, body} = value;
-        return '(lambda ' + sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
-    }
-    if (type === 'macro') {
-        if (typeof value.procedure === 'function') {
-            return '(macro #native)';
-        }
-        const {pattern, body} = value.procedure;
-        return '(macro ' +  sexpr(pattern) + ' ' + sexpr(body) + ')';  // TODO?
-    }
-
-    // TODO Use an assert above instead.
-    throw new Error(`Unrecognized node type ${json(type)}: ${json(value)}`);
-}
+const {keyValue, sexpr} = Sexpr,
+      {assert}          = Assert;
 
 function repositionEllipses(datum) {
     // Return a transformed copy of `datum` where trailing "<etc> ..." have been
@@ -61,30 +17,19 @@ function repositionEllipses(datum) {
                         `(template): ${sexpr(datum)}`);
     }
 
-    // TODO: describe this funny thing
-    const result = [];
-    var   depth  = 0;
-
-    Array.from(value).reverse().forEach(item => {
-        if (item.symbol === '...') {
-            // Encountered an ellipsis. Keep track of how many are in a row.
-            ++depth;
-        }
-        else if (depth > 0) {
-            // Encountered a non-ellipsis, but there are some adjacent. Wrap.
-            let wrapped = repositionEllipses(item);
-            for (; depth; --depth) {
-                wrapped = {list: [{symbol: '...'}, wrapped]};
-            }
-            result.push(wrapped);
-        }
-        else {
-            // Encountered a non-ellipsis, and no wrapping is necessary.
+    const array = value.reduce((result, item) => {
+        if (item.symbol !== '...') {
             result.push(repositionEllipses(item));
         }
-    });
+        else {
+            const backIndex   = result.length - 1;
+            result[backIndex] = {list: [{symbol: '...'}, result[backIndex]]};
+        }
 
-    return {list: result.reverse()};
+        return result;
+    }, []);
+
+    return {list: array};
 }
 
 function letMacroProcedure(environment, {list: bindings}, ...body) {
@@ -105,7 +50,7 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
                            ...body]}]};
     }
 
-    // TODO: assert that bindings.length === 1.
+    assert.deepEqual(() => bindings.length, () => 1);
 
     let argSymbol, argValue;
 
@@ -121,8 +66,6 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
         argValue  = template;
     }
     else {
-        // TODO enforce patternType === 'list'
-        // TODO enforce template is {list: [...]}
         const [procedureName, ...procedurePattern] = patternValue;
         argSymbol = procedureName;
         argValue  = {
@@ -228,7 +171,41 @@ function transpose(object) {
 }
 
 function ellipsisMacroProcedure(environment, ...args) {
-    // TODO: Document (there are some subtle points about the environment).
+    // The ellipsis ("...") macro takes exactly one argument and expands it into
+    // a splice having as many items as there are values in list-valued
+    // local bindings within the argument. That's a mouthfull. The idea is this:
+    //
+    //     (... (foo bar))
+    //
+    // If either `foo` or `bar` or both are _locally_ bound to a list, then
+    // (foo bar) will be repeated for each index up to the length of the
+    // shortest list, e.g.
+    //
+    //     (let ([foo (0 1 2)])
+    //       (... (foo bar)))
+    //
+    // expands to
+    //
+    //     (0 bar)
+    //     (1 bar)
+    //     (2 bar)
+    //
+    // and if `foo` is `(0 1 2)` and `bar` is `(a b)`, then `(... (foo bar))`
+    // expands to
+    //
+    //     (0 a)
+    //     (1 b)
+    //
+    // When I say "locally" bound, I mean that the binding must be in the
+    // immediately enclosing scope, as opposed to some outer one. This prevents
+    // the expansion of lists that are free in procedure templates that include
+    // "...". In that case, only _bound_ lists should be expanded. Restricting
+    // expansion to locally bound names guarantees that free variables are not
+    // expanded in the procedure template application case.
+    // 
+    // In particular, a `let` expression that introduces multiple bindings
+    // introduces each in its own scope (enclosing the previous ones), and so
+    // "..." would expand only the last one.
 
     if (args.length !== 1) {
         throw new Error('The "..." macro takes exactly one argument, but was ' +
@@ -247,13 +224,13 @@ function ellipsisMacroProcedure(environment, ...args) {
                                   'variable must be bound to a list, but ' +
                                   `${name} is bound to ${sexpr(value)}.`);
               }
-              
+
               result[name] = array;
               return result;
           }, {});
 
     // The idea is that
-    // 
+    //
     //     `(... (a b))`
     //
     // becomes
@@ -266,7 +243,7 @@ function ellipsisMacroProcedure(environment, ...args) {
     //       (a b))
     //
     // and so on.
-    //   
+    //
     const expanded = {
         splice: transpose(referencedValues).map(bindings => ({
             list: [
@@ -310,11 +287,4 @@ const defaultEnvironment = Object.freeze({
 
 return {defaultEnvironment};
 
-}());
-
-// for node.js
-try {
-    Object.assign(exports, Builtins);
-}
-catch (e) {
-}
+});

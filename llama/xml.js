@@ -1,5 +1,4 @@
-
-const Xml = (function () {
+define(['./sexpr'], function (Sexpr) {
 /* Here's what a (XML) node is:
 
     Node  ::=  {string: ...}
@@ -44,14 +43,7 @@ number, symbol, or a list. If it's a symbol, then it's converted into a string.
 If it's a list, then the list is converted into a Node.
 */
 
-const json = JSON.stringify;
-
-function keyValue(object) {
-    // TODO assert that there is exactly one key.
-    const key = Object.keys(object)[0];
-
-    return [key, object[key]];
-}
+const {json, keyValue, sexpr} = Sexpr;
 
 function stripQuote(evaluatedTree) {
     const [type, value] = keyValue(evaluatedTree);
@@ -67,10 +59,10 @@ function stripQuote(evaluatedTree) {
 }
 
 function toNodeNoQuote(evaluatedTree) {
+    // console.log(`toNodeNoQuote: ${sexpr(evaluatedTree)}`);
     const [type, value] = keyValue(evaluatedTree);
 
     if (["string", "number", "symbol"].indexOf(type) !== -1) {
-        // TODO: symbol makes attributes easier, but does it make sense?
         return evaluatedTree;
     }
 
@@ -221,11 +213,4 @@ function toXml(node) {
 
 return {toNode, toXml};
 
-}());
-
-// for node.js
-try {
-    Object.assign(exports, Xml);
-}
-catch (e) {
-}
+});

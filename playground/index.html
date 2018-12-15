@@ -1,61 +1,13 @@
 <html>
   <head>
-    <script src="../llama/lex.js"></script>
-    <script src="../llama/parse.js"></script>
-    <script src="../llama/evaluate.js"></script>
-    <script src="../llama/builtins.js"></script>
-    <script src="../llama/xml.js"></script>
+    <script src="require.js"></script>
     <script>
-var calculated = {};
+var onInput, onToggle;
 
-function onToggle() {
-    const radios  = document.getElementsByName("showWhat"),
-          display = document.getElementById("output");
-
-    radios.forEach(radio => {
-        if (radio.checked) {
-            display.value = calculated[radio.value] || "";
-        }
-    });
-}
-
-function pprint(value) {
-    return JSON.stringify(value, null, 2);
-}
-
-function onInput() {
-   const entry   = document.getElementById("input"),
-         display = document.getElementById("output");
-    try {
-        const input = entry.value;
-
-        const tokens = Lex.tokens(input);
-        calculated.tokens = pprint(tokens);
-        onToggle();
-
-        const tree = Parse.parse(tokens);
-        calculated.parse = pprint(tree);
-        onToggle();
-
-        const value = Evaluate.evaluate(tree, Builtins.defaultEnvironment);
-        calculated.evaluate = pprint(value);
-        onToggle();
-
-        const node = Xml.toNode(value);
-        calculated.nodes = pprint(node);
-        onToggle();
-
-        const text = Xml.toXml(node);
-        calculated.text = text;
-        onToggle();
-
-        display.style.backgroundColor = '';
-    }
-    catch (error) {
-        display.style.backgroundColor = '#FFF0F0';
-        throw error;
-    }
-}
+require(['playground'], function (Playground) {
+  onInput  = Playground.onInput;
+  onToggle = Playground.onToggle;
+});
     </script>
   </head>
   <body>
@@ -75,25 +27,44 @@ function onInput() {
         <td></td>
         <td>
           <form>
-            <input type="radio"     name="showWhat" onchange="onToggle()"
-                   value="tokens"   id="radioTokens">
-            <label for="radioTokens">Tokens</label>
-
-            <input type="radio"     name="showWhat" onchange="onToggle()"
-                   value="parse"    id="radioParse">
-            <label for="radioParse">Parse Tree</label>
-
-            <input type="radio"     name="showWhat" onchange="onToggle()"
-                   value="evaluate" id="radioEvaluate">
-            <label for="radioEvaluate">Evaluated Tree</label>
-
-            <input type="radio"     name="showWhat" onchange="onToggle()"
-                   value="nodes"    id="radioNodes">
-            <label for="radioNodes">XML Nodes</label>
-
-            <input type="radio"     name="showWhat" onchange="onToggle()"
-                   value="text"     id="radioText"  checked>
-            <label for="radioText">XML Text</label>
+            <table>
+              <tr>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="tokens"   id="radioTokens">
+                  <label for="radioTokens">Tokens</label>
+                </td>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="parse"    id="radioParse">
+                  <label for="radioParse">Parse Tree</label>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="evaluate" id="radioEvaluate">
+                  <label for="radioEvaluate">Evaluated Tree</label>
+                </td>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="sexpr"    id="radioSexpr">
+                  <label for="radioSexpr">Evaluated S-Expression</label>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="nodes"    id="radioNodes">
+                  <label for="radioNodes">XML Nodes</label>
+                </td>
+                <td>
+                  <input type="radio"     name="showWhat" onchange="onToggle()"
+                         value="text"     id="radioText"  checked>
+                  <label for="radioText">XML Text</label>
+                </td>
+              </tr>
+            </table>
           </form>
         </td>
       </tr>

@@ -1,4 +1,4 @@
-const Parse = (function () {
+define(['./assert'], function (Assert) {
 /* Here is the grammar:
 
     datum  ::=   STRING
@@ -26,6 +26,8 @@ const Parse = (function () {
 Note that whitespace tokens and comment tokens are ignored during parsing.
 */
 
+const {assert} = Assert;
+
 function listParser(suffix, tokens, index) {
     // The idea is to parse (`doParse`) elements until the parser returns
     // `undefined` as its parsed value. This will mean that we've enountered a
@@ -47,7 +49,7 @@ function listParser(suffix, tokens, index) {
         };
 
         if (index >= tokens.length) {
-            // TODO assert index === tokens.length (has to be true)
+            assert.deepEqual(() => index,() => tokens.length);
             throw new Error(`Reached end without expected "${suffix}"`);
         }
 
@@ -95,11 +97,4 @@ function parse(tokens) {
 
 return {parse};
 
-}());
-
-// for node.js
-try {
-    Object.assign(exports, Parse);
-}
-catch (e) {
-}
+});
