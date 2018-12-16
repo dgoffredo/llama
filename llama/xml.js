@@ -66,6 +66,20 @@ function toNodeNoQuote(evaluatedTree) {
         return evaluatedTree;
     }
 
+    // Special exception made for splices of one element. This happens when you
+    // have:
+    //
+    //     (let (blahblah...) (my thing))
+    //
+    // It's reasonable to interpet this as if it were just `(my thing)`, but
+    // since `let` bodies can contain multiple statements, it's instead a
+    // splice containing a list that contains that one list. If that's the case,
+    // let's just take it. If there are multiple things in the `let`, though,
+    // don't, because then there'd be no root.
+    if (type === "splice" && value.length === 1) {
+        return toNodeNoQuote(value[0]);
+    }
+
     if (type !== "list") {
         throw new Error(`XML node cannot have type ${json(type)}. ` +
                         'It must be of type string, number, or list. Tag ' +

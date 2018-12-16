@@ -7,6 +7,8 @@ var onInput, onToggle;
 require(['playground'], function (Playground) {
   onInput  = Playground.onInput;
   onToggle = Playground.onToggle;
+
+  onInput();  // render initial answer
 });
     </script>
   </head>
@@ -16,11 +18,16 @@ require(['playground'], function (Playground) {
         <td>
           <textarea cols="80" rows="30" autofocus
                     id="input"
-                    oninput="onInput()">Input goes here.</textarea>
+                    oninput="onInput()">
+(input ([llama {goes here}])
+  (or
+    (let ([(where what) (maybe (conc "anywhere you " what))])
+      (where "want")
+      (where "like"))))</textarea>
         </td>
         <td>
           <textarea cols="80" rows="30" readonly
-                    id="output">Output appears here.</textarea>
+                    id="output"></textarea>
         </td>
       </tr>
       <tr>

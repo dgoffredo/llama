@@ -28,33 +28,30 @@ function onInput() {
 
         const tokens = Lex.tokens(input);
         calculated.tokens = pprint(tokens);
-        onToggle();
 
         const tree = Parse.parse(tokens);
         calculated.parse = pprint(tree);
-        onToggle();
 
         const value = Evaluate.evaluate(tree, Builtins.defaultEnvironment);
         calculated.evaluate = pprint(value);
-        onToggle();
 
         const sexpr = Sexpr.sexpr(value);
         calculated.sexpr = sexpr;
-        onToggle();
 
         const node = Xml.toNode(value);
         calculated.nodes = pprint(node);
-        onToggle();
 
         const text = Xml.toXml(node);
         calculated.text = text;
-        onToggle();
 
         display.style.backgroundColor = '';
     }
     catch (error) {
         display.style.backgroundColor = '#FFF0F0';
         throw error;
+    }
+    finally {
+        onToggle();
     }
 }
 

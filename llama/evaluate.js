@@ -145,8 +145,8 @@ function bindingsFromMatch(pattern, subject, bindings) {
             const difference = subjectValue.length < patternValue.length ?
                                'shorter' : 'longer';
             throw new Error(`Parsed value ${sexpr(subject)} is ` +
-                            `${json(difference)} than, and thus doesn't ` +
-                            `match, the pattern ${sexpr(pattern)}.`);
+                            `${difference} than, and thus doesn't match, ` +
+                            `the pattern ${sexpr(pattern)}.`);
         }
 
         patternValue.forEach((patternMember, i) =>
