@@ -33,7 +33,7 @@ function deepEqual(a, b) {
     if (isObject(a) && isObject(b)) {
         const aKeys = Object.keys(a);
 
-        return aKeys.sort() === Object.keys(b).sort() &&
+        return deepEqual(aKeys.sort(), Object.keys(b).sort()) &&
                aKeys.every(aKey => deepEqual(a[aKey], b[aKey]));
     }
 
