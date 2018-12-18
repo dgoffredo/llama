@@ -91,10 +91,16 @@ be selected:
   evaluated AST.
 - *XML Text*: the final XML output
 
-### Using node.js
-Each `.js` file in [llama/](llama/) is a node module. None of them have
-dependencies. You can import using `require`, e.g.
-`const Lex = require('./llama/lex.js')`.
+### Using `llama.js`
+[bin/llama.js](bin/llama.js) is a [node][node] script that reads llama from a
+specified input file or from standard input, and prints the resulting XML to
+standard output.
+
+### Using node.js, etc.
+Each `.js` file in [llama/](llama/) is an Asynchronous Module Definition
+(AMD) module. You can use [requirejs][requirejs], or any other conforming AMD
+module loader, to import the llama source modules in node, the browser, or
+your javascript environment of choice.
 
 More
 ----
@@ -339,3 +345,6 @@ expands to:
   list.
 - `(comment args ...)`: Ignore the form. This gives a convenient way to comment
   out blocks of code in a nestable way.
+
+[node]: https://nodejs.org/en/
+[requirejs]: https://requirejs.org/
