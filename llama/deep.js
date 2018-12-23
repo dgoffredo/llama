@@ -5,7 +5,17 @@ function isObject(value) {
     return Object.prototype.toString.call(value) === '[object Object]';
 }
 
-function deepEqual(a, b) {
+function freeze(object) {
+    try {
+        Object.keys(object).forEach(key => freeze(object[key]));
+    }
+    catch (ignored) {
+    }
+
+    return Object.freeze(object);
+}
+
+function equal(a, b) {
     // just an optimization
     if (typeof a !== typeof b) {
         return false;
@@ -26,21 +36,21 @@ function deepEqual(a, b) {
     // arrays
     if (Array.isArray(a) && Array.isArray(b)) {
         return a.length === b.length &&
-               a.every((aMember, index) => deepEqual(aMember, b[index]));
+               a.every((aMember, index) => equal(aMember, b[index]));
     }
 
     // objects like object literals
     if (isObject(a) && isObject(b)) {
         const aKeys = Object.keys(a);
 
-        return deepEqual(aKeys.sort(), Object.keys(b).sort()) &&
-               aKeys.every(aKey => deepEqual(a[aKey], b[aKey]));
+        return equal(aKeys.sort(), Object.keys(b).sort()) &&
+               aKeys.every(aKey => equal(a[aKey], b[aKey]));
     }
 
     // Ran out of ideas. Compare identity.
     return a === b;
 }
 
-return {deepEqual, isObject};
+return {equal, freeze, isObject};
 
 });

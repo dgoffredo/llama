@@ -1,6 +1,4 @@
-define(['./deepequal'], function (DeepEqual) {
-
-const {deepEqual} = DeepEqual;
+define(['./deep'], function (Deep) {
 
 function body(lambda) {
     // In order to get both the value of something and how it looks in the
@@ -52,7 +50,7 @@ assert.deepEqual = function (getLeft, getRight) {
 
     const [left, right] = [getLeft(), getRight()];
 
-    if (deepEqual(left, right)) {
+    if (Deep.equal(left, right)) {
         return;
     }
 
@@ -72,7 +70,7 @@ assert.deepNotEqual = function (getLeft, getRight) {
 
     const [left, right] = [getLeft(), getRight()];
 
-    if (!deepEqual(left, right)) {
+    if (!Deep.equal(left, right)) {
         return;
     }
 

@@ -1,4 +1,4 @@
-define(['./sexpr', './assert'], function (Sexpr, Assert) {
+define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
 
 const {keyValue, sexpr} = Sexpr,
       {assert}          = Assert;
@@ -259,7 +259,7 @@ function ellipsisMacroProcedure(environment, ...args) {
     return expanded;
 }
 
-const defaultEnvironment = Object.freeze({
+const defaultEnvironment = Deep.freeze({
     bindings: {
         let: {
             macro: {

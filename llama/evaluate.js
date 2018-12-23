@@ -1,4 +1,4 @@
-define(['./sexpr', './assert'], function (Sexpr, Assert) {
+define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
 /* Here are the possible things:
 
     {string: ...}     // remains verbatim
@@ -17,8 +17,8 @@ define(['./sexpr', './assert'], function (Sexpr, Assert) {
     {procedure: function (env, ...args) {...}}
 */
 
-const {json, keyValue, sexpr} = Sexpr,
-      {assert}                = Assert;
+const {keyValue, sexpr} = Sexpr,
+      {assert}          = Assert;
 
 function lookup(symbolName, environment) {
     const value = environment.bindings[symbolName];
@@ -87,7 +87,7 @@ function bindingsFromMatch(pattern, subject, bindings) {
     // exactly the same.
     if (['quote', 'number', 'string'].indexOf(patternType) !== -1 &&
         // compare type in addition to value
-        !deepEqual(pattern, subject)) {
+        !Deep.equal(pattern, subject)) {
         throw new Error(`The value parsed as ${sexpr(subject)} does not ` +
                         `match the literal pattern ${sexpr(pattern)}.`);
     }

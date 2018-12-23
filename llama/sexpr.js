@@ -1,8 +1,8 @@
-define(['./deepequal', './assert'], function (DeepEqual, Assert) {
+define(['./deep', './assert'], function (Deep, Assert) {
 
-const {deepEqual, isObject} = DeepEqual,
-      {assert}              = Assert,
-      json                  = JSON.stringify;
+const {isObject} = Deep,
+      {assert}   = Assert,
+      json       = JSON.stringify;
 
 function keyValue(object) {
     assert(() => isObject(object));
@@ -63,6 +63,6 @@ function sexpr(datum) {
     }
 }
 
-return {keyValue, deepEqual, sexpr, json};
+return {keyValue, sexpr, json};
 
 });
