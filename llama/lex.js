@@ -8,9 +8,9 @@ const regexes = [
     {closeBracket:     /\]/},
     {openBrace:        /\{/},
     {closeBrace:       /\}/},
-    {whitespace:       /\s+/},
-    {number:           /\d[^;'\s()[\]{}]*/},
-    {symbol:           /[^;'\d\s()[\]{}][^;'\s()[\]{}]*/},
+    {whitespace:       /\s+|,/},
+    {number:           /\d[^;'\s()[\]{},]*/},
+    {symbol:           /[^;'\d\s()[\]{},][^;'\s()[\]{},]*/},
     {quote:            /'/},
     {comment:          /;[^\n]*(?:\n|$)/}
 ].map(entry => {

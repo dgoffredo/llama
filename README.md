@@ -120,14 +120,15 @@ A Llama value is any of the following productions:
 
     quote  ::=  QUOTE datum
 
-    STRING      ::=  /"(?:[^"]|\\.)*"/
-    WHITESPACE  ::=  /\s+/
-    NUMBER      ::=  /\d[^;'\s()[\]{}]*/
-    SYMBOL      ::=  /[^;'\d\s()[\]{}][^;'\s()[\]{}]*/
+    STRING      ::=  /"(?:[^"\\]|\\.)*"/
+    WHITESPACE  ::=  /\s+,/
+    NUMBER      ::=  /\d[^;'\s()[\]{},]*/
+    SYMBOL      ::=  /[^;'\d\s()[\]{},][^;'\s()[\]{},]*/
     QUOTE       ::=  /'/
     COMMENT     ::=  /;[^\n]*(?:\n|$)/
 
-where `WHITESPACE` and `COMMENT` tokens are ignored.
+where `WHITESPACE` and `COMMENT` tokens are ignored. Note that the comma is
+considered whitespace.
 
 ### The `let` Macro
 The `let` macro allows for the definition of local name bindings and procedures.
