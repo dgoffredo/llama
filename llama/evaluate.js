@@ -108,52 +108,67 @@ function bindingsFromMatch(pattern, subject, bindings) {
     if (checkEllipsis(patternValue)) {
         // This pattern list ends in "...", so special consideration must be
         // taken for the "zero or more of" behavior.
-        const unaffectedEnd     = patternValue.length - 2,
-              unaffected        = patternValue.slice(0, unaffectedEnd),
-              unaffectedSubject = subjectValue.slice(0, unaffected.length),  // AAUUUGHHHH!!!!
-              affected          = patternValue[unaffectedEnd],
-              affectedSubject   = subjectValue.slice(unaffected.length);
-
-        // The parts unaffected by the "...", e.g. `foo bar` in
-        // `(foo bar baz ...)`, can be treated normally.
-        bindingsFromMatch({list: unaffected},
-                          {list: unaffectedSubject},
-                          bindings);
-
-        // The part affected by the "...", e.g. `baz` in `(foo bar baz ...)`,
-        // needs special treatment.
-        affectedSubject.forEach(affectedSubjectPart => {
-            const bindingsThisTime =
-                bindingsFromMatch(affected, affectedSubjectPart, {});
-
-            // Append the bound values to _arrays_ by the same name in bindings.
-            Object.keys(bindingsThisTime).forEach(name => {
-                const value  = bindingsThisTime[name];
-                var   values = bindings[name];
-
-                if (values === undefined) {
-                    bindings[name] = values = {list: []};
-                }
-
-                values.list.push(value);
-            });
-        });
+        bindingsFromListMatchEllipsis(patternValue, subjectValue, bindings);
     }
     else {
         // No ellipsis, so just match per element.
-        if (subjectValue.length !== patternValue.length) {
-            const difference = subjectValue.length < patternValue.length ?
-                               'shorter' : 'longer';
-            throw new Error(`Parsed value ${sexpr(subject)} is ` +
-                            `${difference} than, and thus doesn't match, ` +
-                            `the pattern ${sexpr(pattern)}.`);
-        }
-
-        patternValue.forEach((patternMember, i) =>
-            bindingsFromMatch(patternMember, subjectValue[i], bindings));
+        bindingsFromListMatchNoEllipsis(patternValue, subjectValue, bindings);
     }
 
     return bindings;
+}
+
+function bindingsFromListMatchEllipsis(patternValue, subjectValue, bindings) {
+    // See `bindingsFromMatch`.
+
+    // This pattern list ends in "...", so special consideration must be
+    // taken for the "zero or more of" behavior.
+    const unaffectedEnd     = patternValue.length - 2,
+          unaffected        = patternValue.slice(0, unaffectedEnd),
+          unaffectedSubject = subjectValue.slice(0, unaffected.length),
+          affected          = patternValue[unaffectedEnd],
+          affectedSubject   = subjectValue.slice(unaffected.length);
+
+    // The parts unaffected by the "...", e.g. `foo bar` in `(foo bar baz ...)`,
+    // can be treated normally.
+    bindingsFromMatch({list: unaffected},
+                      {list: unaffectedSubject},
+                      bindings);
+
+    // The part affected by the "...", e.g. `baz` in `(foo bar baz ...)`, needs
+    // special treatment.
+    affectedSubject.forEach(affectedSubjectPart => {
+        const bindingsThisTime =
+            bindingsFromMatch(affected, affectedSubjectPart, {});
+
+        // Append the bound values to _arrays_ by the same name in bindings.
+        Object.keys(bindingsThisTime).forEach(name => {
+            const value  = bindingsThisTime[name];
+            var   values = bindings[name];
+
+            if (values === undefined) {
+                bindings[name] = values = {list: []};
+            }
+
+            values.list.push(value);
+        });
+    });
+}
+
+function bindingsFromListMatchNoEllipsis(patternValue, subjectValue, bindings) {
+    // See `bindingsFromMatch`.
+
+    // No ellipsis, so just match per element.
+    if (subjectValue.length !== patternValue.length) {
+        const difference = subjectValue.length < patternValue.length ?
+                            'shorter' : 'longer';
+        throw new Error(`Parsed value ${sexpr(subjectValue)} is ` +
+                        `${difference} than, and thus doesn't match, the ` +
+                        `pattern ${sexpr(patternValue)}.`);
+    }
+
+    patternValue.forEach((patternMember, i) =>
+        bindingsFromMatch(patternMember, subjectValue[i], bindings));
 }
 
 function deduceBindings(pattern, args) {
@@ -201,7 +216,7 @@ function evaluate(datum, environment) {
 function evaluate_(datum, environment) {
     const [key, value] = keyValue(datum),
           listOrSplice = whichOne => () => {
-
+        // What follows is the body of the return value of `listOrSplice`.
         if (value.length === 0) {
             return datum;
         }
