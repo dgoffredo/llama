@@ -85,11 +85,14 @@ function bindingsFromMatch(pattern, subject, bindings) {
 
     // If the pattern is something literal, then whatever it matches has to be
     // exactly the same.
-    if (['quote', 'number', 'string'].indexOf(patternType) !== -1 &&
+    if (['quote', 'number', 'string'].indexOf(patternType) !== -1) {
         // compare type in addition to value
-        !Deep.equal(pattern, subject)) {
-        throw new Error(`The value parsed as ${sexpr(subject)} does not ` +
-                        `match the literal pattern ${sexpr(pattern)}.`);
+        if (!Deep.equal(pattern, subject)) {
+            throw new Error(`The value parsed as ${sexpr(subject)} does not ` +
+                            `match the literal pattern ${sexpr(pattern)}.`);
+        }
+
+        return bindings;
     }
 
     // If the pattern is a symbol, then just bind the subject to that name.

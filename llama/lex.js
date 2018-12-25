@@ -1,7 +1,7 @@
 define([], function () {
 
 const regexes = [
-    {string:           /"(?:[^"]|\\.)*"/},
+    {string:           /"(?:[^"\\]|\\.)*"/},
     {openParenthesis:  /\(/},
     {closeParenthesis: /\)/},
     {openBracket:      /\[/},

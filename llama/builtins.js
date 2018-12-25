@@ -57,8 +57,17 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
     // There's only one binding. Either it's a procedure-like pattern (e.g.
     // `(foo a b)`) or it's a variable-like pattern (e.g. `foo`). Convert the
     // whole expression into an immediately evaluated procedure.
-    const {list: [pattern, template]} = bindings[0],
-          [patternType, patternValue] = keyValue(pattern);
+    const {list: [pattern, template, ...extra]} = bindings[0],
+          [patternType, patternValue]           = keyValue(pattern);
+
+    if (extra.length !== 0) {
+        // Note for the future: If you ever want to support matching of multiple
+        // patterns, here's the place (it would allow for general computation,
+        // though).
+        throw new Error('A "let" binding must be a list of length two: first ' +
+                        'the pattern and then the template; but extra items ' +
+                        `specified after the template: ${sexpr(extra)}`);
+    }
 
     if (patternType === 'symbol') {
         // The pattern is just a variable name.
