@@ -1,12 +1,12 @@
 define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
 
-const {keyValue, sexpr} = Sexpr,
-      {assert}          = Assert;
+const {typeValue, sexpr} = Sexpr,
+      {assert}           = Assert;
 
 function repositionEllipses(datum) {
     // Return a transformed copy of `datum` where trailing "<etc> ..." have been
     // replaced by `(... <etc>)` forms.
-    const [type, value] = keyValue(datum);
+    const [type, value] = typeValue(datum);
 
     if (type !== 'list' || value.length === 0) {
         return datum;
@@ -29,7 +29,7 @@ function repositionEllipses(datum) {
         return result;
     }, []);
 
-    return {list: array};
+    return {list: array, suffix: datum.suffix || ')'};
 }
 
 function letMacroProcedure(environment, {list: bindings}, ...body) {
@@ -58,7 +58,7 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
     // `(foo a b)`) or it's a variable-like pattern (e.g. `foo`). Convert the
     // whole expression into an immediately evaluated procedure.
     const {list: [pattern, template, ...extra]} = bindings[0],
-          [patternType, patternValue]           = keyValue(pattern);
+          [patternType, patternValue]           = typeValue(pattern);
 
     if (extra.length !== 0) {
         // Note for the future: If you ever want to support matching of multiple
@@ -102,7 +102,7 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
 
 function concProcedure(environment, ...args) {
     const values = args.reduce(function processArg(result, arg) {
-        const [key, value] = keyValue(arg);
+        const [key, value] = typeValue(arg);
         if (key === 'quote') {
             return processArg(result, value);
         }
@@ -119,7 +119,7 @@ function concProcedure(environment, ...args) {
                         `together: ${sexpr(keys)}`);
     }
 
-    const [type, literals] = keyValue(values);
+    const [type, literals] = typeValue(values);
     return {
         [type]: literals.join('')
     };
@@ -142,7 +142,7 @@ function commentMacroProcedure() {
 function localBindingsReferenced(bindings, datum, result) {
     result = result || {};
 
-    const [type, value] = keyValue(datum);
+    const [type, value] = typeValue(datum);
 
     if (type === 'symbol') {
         const bound = bindings[value];

@@ -2,17 +2,16 @@ define(['./deep', './assert'], function (Deep, Assert) {
 
 const {isObject} = Deep,
       {assert}   = Assert,
-      json       = JSON.stringify;
+      json       = JSON.stringify,
+      nodeTypes  = 
+          'list splice quote string number symbol macro procedure'.split(' ');
 
-function keyValue(object) {
+function typeValue(object) {
     assert(() => isObject(object));
 
-    const keys = Object.keys(object);
-    assert.deepEqual(() => keys.length, () => 1);
+    const type = nodeTypes.find(key => object[key] !== undefined);
 
-    const key = Object.keys(object)[0];
-
-    return [key, object[key]];
+    return [type, object[type]];
 }
 
 function sexpr(datum) {
@@ -25,7 +24,7 @@ function sexpr(datum) {
         return sexpr({list: datum});
     }
 
-    const [type, value] = keyValue(datum);
+    const [type, value] = typeValue(datum);
 
     switch (type) {
         case 'symbol': 
@@ -39,7 +38,10 @@ function sexpr(datum) {
             return "'" + sexpr(value);
         }
         case 'list': {
-            return '(' + value.map(sexpr).join(' ') + ')';
+            const suffix = datum.suffix || ')',
+                  prefix = {'}': '{', ')': '(', ']': '['}[suffix];
+
+            return prefix + value.map(sexpr).join(' ') + suffix;
         }
         case 'splice': {
             return value.map(sexpr).join(' ');
@@ -63,6 +65,6 @@ function sexpr(datum) {
     }
 }
 
-return {keyValue, sexpr, json};
+return {typeValue, sexpr, json};
 
 });

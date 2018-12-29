@@ -43,10 +43,10 @@ number, symbol, or a list. If it's a symbol, then it's converted into a string.
 If it's a list, then the list is converted into a Node.
 */
 
-const {json, keyValue, sexpr} = Sexpr;
+const {json, typeValue, sexpr} = Sexpr;
 
 function stripQuote(evaluatedTree) {
-    const [type, value] = keyValue(evaluatedTree);
+    const [type, value] = typeValue(evaluatedTree);
     if (type === "quote") {
         return stripQuote(value);
     }
@@ -60,7 +60,7 @@ function stripQuote(evaluatedTree) {
 
 function toNodeNoQuote(evaluatedTree) {
     // console.log(`toNodeNoQuote: ${sexpr(evaluatedTree)}`);
-    const [type, value] = keyValue(evaluatedTree);
+    const [type, value] = typeValue(evaluatedTree);
 
     if (["string", "number", "symbol"].indexOf(type) !== -1) {
         return evaluatedTree;
@@ -128,13 +128,13 @@ function toNode(evaluatedTree) {
 }
 
 function looksLikeAttributeList(datum) {
-    const [type, value] = keyValue(datum);
+    const [type, value] = typeValue(datum);
     if (type !== 'list') {
         return false;
     }
 
     return value.every(item => {
-        const [itemKey, itemValue] = keyValue(item);
+        const [itemKey, itemValue] = typeValue(item);
 
         return itemKey === 'list' &&
                itemValue.length === 2 &&
@@ -144,8 +144,8 @@ function looksLikeAttributeList(datum) {
 
 function parseAttributes(inputList) {
     return inputList.reduce((attributes, {list: [key, value]}) => {
-        const name                    = keyValue(key)[1],
-              [valueType, valueValue] = keyValue(value);
+        const name                    = typeValue(key)[1],
+              [valueType, valueValue] = typeValue(value);
 
         if (name in attributes) {
             throw new Error(`Duplicate attribute ${json(name)}.`);
@@ -169,7 +169,7 @@ function toAttributeValue(node) {
     }
 
     if ('string' in node || 'symbol' in node) {
-        const value = keyValue(node)[1];
+        const value = typeValue(node)[1];
         // If this string/symbol begins as a number could, escape it with a
         // backtick.
         if (value.match(/^[.\-+\d].*/)) {
@@ -205,7 +205,7 @@ function escapeXml(text) {
 
 function toXml(node) {
     if ('string' in node || 'symbol' in node || 'number' in node) {
-        const value = keyValue(node)[1];
+        const value = typeValue(node)[1];
         return escapeXml(value);
     }
 

@@ -1,5 +1,6 @@
 define(['./assert'], function (Assert) {
-/* Here is the grammar:
+/*
+Here is the grammar:
 
     datum  ::=   STRING
             |    NUMBER
@@ -13,9 +14,8 @@ define(['./assert'], function (Assert) {
             |    "{" datum* "}"
 
     quote  ::=  QUOTE datum
-*/
 
-/* Here are the resulting parse tree nodes:
+Here are the resulting parse tree nodes:
 
     {string: ...}  // unquoted and unescaped
     {number: ...}  // the _text_ of the number
@@ -24,6 +24,22 @@ define(['./assert'], function (Assert) {
     {quote: ...}   // as another node (e.g. 'foo -> {quote: {symbol: "foo"}})
 
 Note that whitespace tokens and comment tokens are ignored during parsing.
+
+Also, `{list: ...}` nodes have an additional property, "suffix", that indicates
+which grouping character ended the list: one of ")", "]", or "}", e.g.
+
+    [1 2]
+
+parses as
+
+    {list: [{number: "1"}, {number: "2"}], suffix: "]"}
+
+Consider the "suffix" attribute optional, however, and default to ")" if the
+property is not present. This will never happen in the output of the parser,
+but may happen in subsequent processing of the AST.
+
+Note that in addition to these node types, others can be added during
+evaluation. See `evaluate.js` for more information.
 */
 
 const {assert} = Assert;
@@ -60,7 +76,7 @@ function listParser(suffix, tokens, index) {
                             tokenAfter.text);
         }
 
-        return [{list: result}, index + 1];
+        return [{list: result, suffix}, index + 1];
     };
 }
 

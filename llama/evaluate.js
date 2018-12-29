@@ -7,17 +7,22 @@ define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
     {list: ...}       // evaluate first element, lookup, etc.
     {quote: ...}      // remains verbatim
 
-    {macro: {
+    {splice: ...}     // splice into enclosing list
+
+    {macro: {           // procedure applied before its arguments are evaluated
         procedure: ...
     }
-    {procedure: {
+    {procedure: {       // pattern-matching procedure
         pattern: ...
         body ...
     }
-    {procedure: function (env, ...args) {...}}
+    {procedure: function (env, ...args) {...}}  // intrinsic procedure
+
+These "possible things" must be kept up to date with the `typeValue` function,
+defined in `sexpr.js`.
 */
 
-const {keyValue, sexpr} = Sexpr,
+const {typeValue, sexpr} = Sexpr,
       {assert}          = Assert;
 
 function lookup(symbolName, environment) {
@@ -80,8 +85,8 @@ function bindingsFromMatch(pattern, subject, bindings) {
 
     bindings = bindings || {};
 
-    const [patternType, patternValue] = keyValue(pattern),
-          [subjectType, subjectValue] = keyValue(subject);
+    const [patternType, patternValue] = typeValue(pattern),
+          [subjectType, subjectValue] = typeValue(subject);
 
     // If the pattern is something literal, then whatever it matches has to be
     // exactly the same.
@@ -199,7 +204,7 @@ function apply(procedure, args, environment) {
 
 function flattenSplices(array) {
     return array.reduce((result, item) => {
-        const [type, inside] = keyValue(item);
+        const [type, inside] = typeValue(item);
         if (type === 'splice') {
             result.push(...inside);
         }
@@ -217,7 +222,7 @@ function evaluate(datum, environment) {
 }
 
 function evaluate_(datum, environment) {
-    const [key, value] = keyValue(datum),
+    const [key, value] = typeValue(datum),
           listOrSplice = whichOne => () => {
         // What follows is the body of the return value of `listOrSplice`.
         if (value.length === 0) {
@@ -226,10 +231,11 @@ function evaluate_(datum, environment) {
 
         const first          = evaluate(value[0], environment),
               rest           = value.slice(1),
-              [type, inside] = keyValue(first),
+              [type, inside] = typeValue(first),
               recur          = arg => evaluate(arg, environment),
               plainList      = () => ({
-                  [whichOne]: flattenSplices([first, ...rest.map(recur)])
+                  [whichOne]: flattenSplices([first, ...rest.map(recur)]),
+                  suffix:     datum.suffix || ')'
                 });
 
         // switch on `type`
