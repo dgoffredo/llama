@@ -88,13 +88,17 @@ function bindingsFromMatch(pattern, subject, bindings) {
     const [patternType, patternValue] = typeValue(pattern),
           [subjectType, subjectValue] = typeValue(subject);
 
+    
     // If the pattern is something literal, then whatever it matches has to be
     // exactly the same.
     if (['quote', 'number', 'string'].indexOf(patternType) !== -1) {
-        // compare type in addition to value
-        if (!Deep.equal(pattern, subject)) {
-            throw new Error(`The value parsed as ${sexpr(subject)} does not ` +
-                            `match the literal pattern ${sexpr(pattern)}.`);
+        // Compare both type and value, but not the whole nodes, because we
+        // want, e.g., `{}` to be equal to `[]` (even though they have different
+        // "suffix" properties).
+        if (!Deep.equal([patternType, patternValue],
+                        [subjectType, subjectValue])) {
+            throw new Error(`The value ${sexpr(subject)} does not match the ` +
+                            `literal pattern ${sexpr(pattern)}.`);
         }
 
         return bindings;
