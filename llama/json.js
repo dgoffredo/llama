@@ -193,7 +193,6 @@ const quoteNull = datum => {
 
 const removeColonsFromObjects = datum => {
     // The macro has three jobs:
-    //
     // 1. Remove separating colon symbols from object literals.
     // 2. Stringify symbols ending in colons within object literals (stripping
     //    the trailing colon as well).
@@ -208,7 +207,6 @@ const removeColonsFromObjects = datum => {
     // procedures, macros, and splices.
     //
     // There are four cases to consider.
-    //
     // 1.  The datum is a quote. In this case, recur on what's inside the quote,
     //     preserving the quote-ness.
     // 2.  The datum is a splice. Just map outselves over the splice.
@@ -251,7 +249,6 @@ const removeColonsFromObjects = datum => {
 
 const jsonMacroProcedure = (environment, ...args) => {
     // The macro has four jobs:
-    //
     // 1. Remove separating colon symbols from object literals.
     // 2. Stringify symbols ending in colons within object literals (stripping
     //    the trailing colon as well).

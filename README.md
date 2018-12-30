@@ -83,7 +83,6 @@ Open [playground/index.html](playground/index.html) in a web browser. The
 left panel is an entry accepting Llama. When valid Llama is entered, the
 resulting output will appear on the right. Any of the following outputs may
 be selected:
-
 - *Tokens*: the tokens lexed from the input string
 - *Parse Tree*: the raw data structure parsed from the lexer tokens
 - *Evaluated Tree*: the AST after macro expansion and expression evaluation
