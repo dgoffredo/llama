@@ -191,6 +191,8 @@ function toAttributeValue(node) {
     return `{${tag} ${args.join(', ')}}`;
 }
 
+// See https://www.w3.org/TR/xml/#syntax
+// via https://stackoverflow.com/a/1091953
 const xmlEscapes = {
     '"': "&quot;",
     "'": "&apos;",
@@ -199,21 +201,27 @@ const xmlEscapes = {
     "&": "&amp;"
 };
 
-function escapeXml(text) {
-    return text.replace(/["'<>&]/g, char => xmlEscapes[char]);
+function escapeXmlText(text) {
+    return text.replace(/[>&]/g, char => xmlEscapes[char]);
+}
+
+function escapeXmlAttribute(text) {
+    // Note that we don't escape the single quote here, because we assume that
+    // the resulting string will be double quoted.
+    return text.replace(/["<&]/g, char => xmlEscapes[char]);
 }
 
 function toXml(node) {
     if ('string' in node || 'symbol' in node || 'number' in node) {
         const value = typeValue(node)[1];
-        return escapeXml(value);
+        return escapeXmlText(value);
     }
 
     const {tag, attributes, children} = node,
           attrs = Object.keys(attributes).
                   map(name => {
                       const attrValue = toAttributeValue(attributes[name]);
-                      return `${name}=${json(escapeXml(attrValue))}`;
+                      return `${name}=${json(escapeXmlAttribute(attrValue))}`;
                   }),
           tagAndAttrs = [tag, ...attrs].join(' ');
 

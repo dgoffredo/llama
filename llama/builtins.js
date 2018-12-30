@@ -1,7 +1,9 @@
-define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
+define(['./sexpr', './assert', './deep', './json'],
+function (Sexpr, Assert, Deep, Json) {
 
-const {typeValue, sexpr} = Sexpr,
-      {assert}           = Assert;
+const {typeValue, sexpr}   = Sexpr,
+      {assert}             = Assert,
+      {jsonMacroProcedure} = Json;
 
 function repositionEllipses(datum) {
     // Return a transformed copy of `datum` where trailing "<etc> ..." have been
@@ -289,6 +291,11 @@ const defaultEnvironment = Deep.freeze({
         "...": {
             macro: {
                 procedure: ellipsisMacroProcedure
+            }
+        },
+        json: {
+            macro: {
+                procedure: jsonMacroProcedure
             }
         }
     }
