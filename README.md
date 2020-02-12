@@ -339,8 +339,8 @@ expands to:
 ```
 
 ### Built-in Procedures and Macros
-- `(conc args ...)`: Concatenate the arguments, which must all be strings or
-  all be symbols, and return the resulting combined string or symbol.
+- `(conc args ...)`: Concatenate the arguments, which can be any mix of strings
+  and symbols, and return a string that is their concatenation.
 - `(repeat count datum)`: Splice `count` copies of `datum` into the enclosing
   list.
 - `(comment args ...)`: Ignore the form. This gives a convenient way to comment

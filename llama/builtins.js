@@ -109,21 +109,12 @@ function concProcedure(environment, ...args) {
             return processArg(result, value);
         }
 
-        (result[key] = result[key] || []).push(value);
+        result.push(value);
         return result;
-    }, {}),
-          keys = Object.keys(values);
+    }, []);
 
-    if (keys.length !== 1) {
-        throw new Error('conc expected arguments having the same type ' +
-                        '(either symbol or string), but instead the  ' +
-                        `following ${keys.length} types were included ` +
-                        `together: ${sexpr(keys)}`);
-    }
-
-    const [type, literals] = typeValue(values);
     return {
-        [type]: literals.join('')
+        string: values.join('')
     };
 }
 
