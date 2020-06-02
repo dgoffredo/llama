@@ -175,7 +175,7 @@ function transpose(object) {
 function ellipsisMacroProcedure(environment, ...args) {
     // The ellipsis ("...") macro takes exactly one argument and expands it into
     // a splice having as many items as there are values in list-valued
-    // local bindings within the argument. That's a mouthfull. The idea is this:
+    // local bindings within the argument. That's a mouthful. The idea is this:
     //
     //     (... (foo bar))
     //
