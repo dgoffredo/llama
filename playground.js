@@ -1,6 +1,6 @@
 define(
 ['lex', 'parse', 'evaluate', 'builtins', 'xml', 'sexpr']
-    .map(name => `../llama/${name}`),
+    .map(name => `./llama/${name}`),
 function (Lex, Parse, Evaluate, Builtins, Xml, Sexpr) {
 
 var calculated = {};
