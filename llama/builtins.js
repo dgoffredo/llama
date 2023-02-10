@@ -87,7 +87,14 @@ function letMacroProcedure(environment, {list: bindings}, ...body) {
                 // In the body, however, "..." can be implemented as a macro,
                 // and so first call `repositionEllipses` to turn `(a (b c)
                 // ...)` into `(a (... (b c)))`.
-                body:    repositionEllipses(template)
+                body:    repositionEllipses(template),
+                // When this procedure is invoked, we'll want to look up free
+                // variables in the environment of the procedure definition,
+                // which is `environment`, instead of in the caller's
+                // environment.
+                // Defining `definitionEnvironment` will cause `apply` to use
+                // it for lookups instead of using the caller's environment.
+                definitionEnvironment: environment
             }
         };
     }

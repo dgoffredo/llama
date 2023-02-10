@@ -14,7 +14,8 @@ define(['./sexpr', './assert', './deep'], function (Sexpr, Assert, Deep) {
     }
     {procedure: {       // pattern-matching procedure
         pattern: ...
-        body ...
+        body: ...
+        definitionEnvironment?: ...
     }
     {procedure: function (env, ...args) {...}}  // intrinsic procedure
 
@@ -197,10 +198,17 @@ function apply(procedure, args, environment) {
         // User-(or macro)-defined procedures get their bindings deduced and
         // then have their bodies evaluated in an environment containing those
         // bindings.
-        const {pattern, body} = procedure;
+        const {pattern, body, definitionEnvironment} = procedure;
 
+        // If `definitionEnvironment` is defined, then use it as the parent
+        // environment instead of `environment`.  This happens in
+        // procedure-style procedures, where free variables refer to their
+        // definitions in the environment where the procedure was _defined_.
+        // Macro-style procedures, on the contrary, don't define
+        // `definitionEnvironment`, and so free variables in macros are
+        // resolved at the call site.
         return evaluate(body, {
-            parent:   environment,
+            parent:   definitionEnvironment || environment,
             bindings: deduceBindings(pattern, args)
         });
     }
