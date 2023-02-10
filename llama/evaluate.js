@@ -190,7 +190,7 @@ function deduceBindings(pattern, args) {
 function apply(procedure, args, environment) {
     if (typeof procedure === 'function') {
         // Built-in procedures get executed right here in JS, with the
-        // environement as their first argument.
+        // environment as their first argument.
         return procedure(environment, ...args);
     }
     else {
